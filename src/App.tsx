@@ -4,8 +4,11 @@ import Header from "./MyComponents/Header";
 import Expenses from "./MyComponents/Expenses";
 import NewExpense from "./MyComponents/NewExpense";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import ExpenseFilter from "./MyComponents/ExpenseFilter";
+// import categories from "./categories";
 
 function App() {
+  // Expenses
   let initExpense;
   initExpense = localStorage.getItem("expenses");
   if (initExpense != null) {
@@ -14,18 +17,21 @@ function App() {
     initExpense = [
       {
         id: 1,
-        title: "Simple title",
+        category: "Entertainment",
         description: "This is simple description just for testing purpose",
+        amount: 0,
       },
     ];
   }
 
+  // Expense state and Hook to save in LocalStorage
   const [expenseArr, setExpenseArr] = useState(initExpense);
   useEffect(() => {
     localStorage.setItem("expenses", JSON.stringify(expenseArr));
   }, [expenseArr]);
 
-  const addExpenseFn = (title: string, desc: string) => {
+  // Add and Remove Expense
+  const addExpenseFn = (desc: string, amount: number, category: string) => {
     let id;
     if (expenseArr.length > 0) {
       id = expenseArr[expenseArr.length - 1].id + 1;
@@ -34,8 +40,9 @@ function App() {
     }
     const newExpenseObj = {
       id: id,
-      title: title,
+      category: category,
       description: desc,
+      amount: amount,
     };
     setExpenseArr([...expenseArr, newExpenseObj]);
   };
@@ -48,6 +55,12 @@ function App() {
     );
     localStorage.setItem("expenses", JSON.stringify(expenseArr));
   };
+
+  // Filter Expense on the basis of Category
+  const [selectedCategory, seSelectedCategory] = useState("");
+  const visibleExpenses = selectedCategory
+    ? expenseArr.filter((e: any) => e.category === selectedCategory)
+    : expenseArr;
 
   const router = createBrowserRouter([
     {
@@ -69,7 +82,14 @@ function App() {
       element: (
         <>
           <Header />
-          <NewExpense addExpense={addExpenseFn} />
+          <NewExpense
+            onSubmit={(expense) =>
+              setExpenseArr([
+                ...expenseArr,
+                { ...expense, id: expenseArr.length + 1 },
+              ])
+            }
+          />
         </>
       ),
     },
@@ -78,7 +98,13 @@ function App() {
       element: (
         <>
           <Header />
-          <Expenses expenses={expenseArr} deleteExpense={deleteExpenseFn} />
+          <ExpenseFilter
+            onSelectCategory={(category) => seSelectedCategory(category)}
+          />
+          <Expenses
+            expenses={visibleExpenses}
+            deleteExpense={deleteExpenseFn}
+          />
         </>
       ),
     },
